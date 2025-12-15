@@ -4,39 +4,10 @@ class TextScramble {
         this.chars = '!<>-_\\/[]{}—=+*^?#________';
         this.update = this.update.bind(this);
 
-        // Initialize Audio Context
-        try {
-            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        } catch (e) {
-            console.warn("Web Audio API not supported");
-        }
-    }
-
-    playBlip() {
-        if (!this.audioCtx) return;
-
-        // Resume context if suspended (browser policy)
-        if (this.audioCtx.state === 'suspended') {
-            this.audioCtx.resume();
-        }
-
-        const oscillator = this.audioCtx.createOscillator();
-        const gainNode = this.audioCtx.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(this.audioCtx.destination);
-
-        // Digital "blip" sound characteristics
-        oscillator.type = 'square';
-        // Random pitch variation for realism (800Hz - 1500Hz)
-        oscillator.frequency.value = 800 + Math.random() * 700;
-
-        // Short envelope
-        gainNode.gain.setValueAtTime(0.05, this.audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.1);
-
-        oscillator.start();
-        oscillator.stop(this.audioCtx.currentTime + 0.1);
+        // Initialize Custom Audio
+        this.audio = new Audio('Writing on keyboard Sound Effect [Typing].mp3');
+        this.audio.loop = true; // Loop in case the text takes longer than the sound
+        this.audio.volume = 0.5; // Reasonable volume
     }
 
     setText(newText) {
@@ -53,6 +24,11 @@ class TextScramble {
         }
         cancelAnimationFrame(this.frameRequest);
         this.frame = 0;
+
+        // Start playing audio when text starts
+        this.audio.currentTime = 0;
+        this.audio.play().catch(e => console.log("Audio play failed (interaction required):", e));
+
         this.update();
         return promise;
     }
@@ -60,7 +36,6 @@ class TextScramble {
     update() {
         let output = '';
         let complete = 0;
-        let playedSound = false; // To limit sounds per frame
 
         for (let i = 0, n = this.queue.length; i < n; i++) {
             let { from, to, start, end, char } = this.queue[i];
@@ -71,13 +46,6 @@ class TextScramble {
                 if (!char || Math.random() < 0.28) {
                     char = this.randomChar();
                     this.queue[i].char = char;
-
-                    // Play sound occasionally when chars change (e.g., 20% chance per frame)
-                    // and only once per frame to avoid distortion
-                    if (!playedSound && Math.random() < 0.2) {
-                        this.playBlip();
-                        playedSound = true;
-                    }
                 }
                 output += `<span class="dud">${char}</span>`;
             } else {
@@ -85,7 +53,11 @@ class TextScramble {
             }
         }
         this.el.innerHTML = output;
+
         if (complete === this.queue.length) {
+            // Stop audio abruptly when finished
+            this.audio.pause();
+            this.audio.currentTime = 0;
             this.resolve();
         } else {
             this.frameRequest = requestAnimationFrame(this.update);
@@ -98,35 +70,71 @@ class TextScramble {
     }
 }
 
-// Sequence of phrases
-const phrases = [
-    'sistemas não se criam sozinhos',
-    'eles são pensados',
-    'orquestrados',
-    'automatizados...',
-    'bem vindo a uma realidade onde todos os seus sistemas podem trabalhar a seu favor.'
-];
+// Localization Data
+const translations = {
+    pt: {
+        phrases: [
+            'sistemas não se criam sozinhos',
+            'eles são pensados',
+            'orquestrados',
+            'automatizados...',
+            'bem vindo a uma realidade onde todos os seus sistemas podem trabalhar a seu favor.'
+        ],
+        btn: '[ acessar o sistema ]'
+    },
+    en: {
+        phrases: [
+            'systems don\'t create themselves',
+            'they are thought out',
+            'orchestrated',
+            'automated...',
+            'welcome to a reality where all your systems can work in your favor.'
+        ],
+        btn: '[ access system ]'
+    },
+    es: {
+        phrases: [
+            'los sistemas no se crean solos',
+            'son pensados',
+            'orquestados',
+            'automatizados...',
+            'bienvenido a una realidad donde todos sus sistemas pueden trabajar a su favor.'
+        ],
+        btn: '[ acceder al sistema ]'
+    },
+    fr: {
+        phrases: [
+            'les systèmes ne se créent pas tout seuls',
+            'ils sont pensés',
+            'orchestrés',
+            'automatisés...',
+            'bienvenue dans une réalité où tous vos systèmes peuvent travailler en votre faveur.'
+        ],
+        btn: '[ accéder au système ]'
+    }
+};
 
 const el = document.querySelector('.scramble-text');
-const fx = new TextScramble(el); // Removed 'window.fx =' to avoid global pollution if not needed
+const fx = new TextScramble(el);
+const ctaBtn = document.querySelector('.system-btn');
+const langOverlay = document.getElementById('lang-overlay');
 
+let currentPhrases = [];
 let counter = 0;
+
 const next = () => {
     // If we've reached the end of the phrases, show the button and stop
-    if (counter >= phrases.length) {
+    if (counter >= currentPhrases.length) {
         document.querySelector('.cta-container').classList.add('visible');
         return;
     }
 
-    fx.setText(phrases[counter]).then(() => {
-        // Wait differently based on the phrase length or specific needs
-        // The user wanted "one by one", implying a sequence.
-        // For the last phrase, we want it to stay.
-        if (counter < phrases.length) {
-            // Standard delay for short phrases
+    fx.setText(currentPhrases[counter]).then(() => {
+        if (counter < currentPhrases.length) {
+            // Standard delay
             setTimeout(next, 2000);
         } else {
-            // Final phrase: show button after a short delay
+            // Final delay before button
             setTimeout(() => {
                 document.querySelector('.cta-container').classList.add('visible');
             }, 800);
@@ -135,5 +143,25 @@ const next = () => {
     counter++;
 };
 
-// Start the sequence after a slight delay
-setTimeout(next, 1500);
+// Handle Language Selection
+document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const lang = btn.getAttribute('data-lang');
+        const data = translations[lang];
+
+        // 1. Set data
+        currentPhrases = data.phrases;
+        ctaBtn.innerText = data.btn;
+
+        // 2. Unlock Audio (User interaction happened!)
+        // Play a silent note or just play the typing sound briefly to "warm up" if needed, 
+        // but our logic plays it on setText anyway.
+        // We assume fx.audio is ready.
+
+        // 3. Hide overlay
+        langOverlay.classList.add('hidden');
+
+        // 4. Start sequence after slight delay
+        setTimeout(next, 1000);
+    });
+});
