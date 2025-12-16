@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Cyberpunk Digital Temple Portfolio</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Noto+Sans:wght@400;500;700&amp;family=Fira+Code:wght@300;400;500;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#25f425",
+                        "secondary": "#D00000",
+                        "background-light": "#f5f8f5",
+                        "background-dark": "#000000",
+                        "surface-dark": "#050a05",
+                        "terminal-gray": "#1a1a1a",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "mono": ["Fira Code", "monospace"],
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glitch': 'glitch 1s linear infinite',
+                        'scanline': 'scanline 8s linear infinite',
+                        'flash': 'flash 0.1s steps(2) 2',
+                    },
+                    keyframes: {
+                        glitch: {
+                            '2%, 64%': { transform: 'translate(2px,0) skew(0deg)' },
+                            '4%, 60%': { transform: 'translate(-2px,0) skew(0deg)' },
+                            '62%': { transform: 'translate(0,0) skew(5deg)' },
+                        },
+                        scanline: {
+                            '0%': { transform: 'translateY(-100%)' },
+                            '100%': { transform: 'translateY(100%)' },
+                        },
+                        flash: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        }
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 8px;
+            background: #000;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #112211;
+            border: 1px solid #25f425;
+        }
+
+        .scanlines::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 50;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .crt-flicker {
+            animation: textShadow 1.6s infinite;
+        }
+
+        @keyframes textShadow {
+            0% {
+                text-shadow: 0.4389924193300864px 0 1px rgba(0, 30, 255, 0.5), -0.4389924193300864px 0 1px rgba(255, 0, 80, 0.3), 0 0 3px;
+            }
+
+            5% {
+                text-shadow: 2.7928974010788217px 0 1px rgba(0, 30, 255, 0.5), -2.7928974010788217px 0 1px rgba(255, 0, 80, 0.3), 0 0 3px;
+            }
+
+            100% {
+                text-shadow: 0.4389924193300864px 0 1px rgba(0, 30, 255, 0.5), -0.4389924193300864px 0 1px rgba(255, 0, 80, 0.3), 0 0 3px;
+            }
+        }
+
+        /* --- LOADING SEQUENCE STYLES --- */
+        #boot-screen {
+            position: fixed;
+            inset: 0;
+            background-color: #000;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 2rem;
+            font-family: 'Fira Code', monospace;
+            color: #25f425;
+            overflow: hidden;
+        }
+
+        .boot-log {
+            margin-bottom: 0.5rem;
+            opacity: 0;
+            animation: logReveal 0.1s forwards;
+        }
+
+        .boot-cursor::after {
+            content: '_';
+            animation: blink 0.5s step-end infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes logReveal {
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Glitch reveal helper classes */
+        .reveal-hidden {
+            opacity: 0;
+            clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
+            /* Hidden top down */
+            transform: translateY(20px);
+            transition: opacity 0.5s ease;
+        }
+
+        .reveal-active {
+            opacity: 1;
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+            transform: translateY(0);
+            animation: glitch-in 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+        }
+
+        @keyframes glitch-in {
+            0% {
+                transform: translate(0, 20px);
+                opacity: 0;
+                filter: blur(5px);
+            }
+
+            20% {
+                transform: translate(-5px, 0) skewX(20deg);
+                opacity: 0.5;
+                filter: blur(0);
+            }
+
+            40% {
+                transform: translate(5px, 0) skewX(-20deg);
+            }
+
+            60% {
+                transform: translate(-5px, 0) skewX(10deg);
+                opacity: 1;
+            }
+
+            80% {
+                transform: translate(5px, 0) skewX(-10deg);
+            }
+
+            100% {
+                transform: translate(0, 0) skewX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Glitter/Noise overlay */
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 45;
+            opacity: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
+            mix-blend-mode: overlay;
+        }
+
+        .glitch-flash {
+            animation: flash-noise 0.2s 3;
+        }
+
+        @keyframes flash-noise {
+            0% {
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        /* Main content wrapper to be hidden */
+        #main-content {
+            opacity: 0;
+        }
+
+        /* Sakura Decoration */
+        .sakura-container {
+            position: fixed;
+            inset: 0;
+            z-index: 5;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .sakura-branch {
+            position: absolute;
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0;
+            /* Starts invisible, revealed by boot sequence */
+            mix-blend-mode: screen;
+            /* Assumes black background on asset */
+            filter: drop-shadow(0 0 5px #ff0055);
+            transition: opacity 2s ease;
+        }
+
+        @keyframes float-sway-1 {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(10px, 15px) rotate(2deg);
+            }
+        }
+
+        @keyframes float-sway-2 {
+            0% {
+                transform: translate(0, 0) rotate(0deg) scale(1);
+            }
+
+            100% {
+                transform: translate(-15px, 10px) rotate(-1deg) scale(1.05);
+            }
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-dark text-primary font-mono antialiased overflow-x-hidden relative scanlines selection:bg-primary selection:text-black">
+
+    <!-- BOOT SCREEN OVERLAY -->
+    <div id="boot-screen">
+        <div id="boot-text-container" class="max-w-2xl w-full mx-auto pb-20">
+            <!-- Logs will be injected here -->
+        </div>
+    </div>
+
+    <div class="noise-overlay" id="noise-overlay"></div>
+
+    <!-- MAIN CONTENT WRAPPER -->
+    <div id="main-content">
+
+        <!-- SAKURA BACKGROUND -->
+        <div class="sakura-container" id="sakura-container">
+            <!-- Top Left Branch -->
+            <div class="sakura-branch w-[800px] h-[800px] -top-40 -left-20 animate-[float-sway-1_15s_ease-in-out_infinite_alternate]"
+                style="background-image: url('assets/cyberpunk_sakura.png'); background-position: top left; opacity: 0; mix-blend-mode: screen;">
+            </div>
+
+            <!-- Bottom Right Branch -->
+            <div class="sakura-branch w-[900px] h-[900px] -bottom-60 -right-40 animate-[float-sway-2_18s_ease-in-out_infinite_alternate]"
+                style="background-image: url('assets/cyberpunk_sakura.png'); background-position: center; transform: rotate(180deg) scaleX(-1); opacity: 0; mix-blend-mode: screen;">
+            </div>
+        </div>
+
+        <header
+            class="fixed top-0 left-0 right-0 z-40 border-b border-[#25f425]/30 bg-[#000000]/90 backdrop-blur-md px-4 sm:px-10 py-3 reveal-hidden"
+            id="header-reveal">
+            <div class="flex items-center justify-between max-w-[1400px] mx-auto">
+                <div class="flex items-center gap-4 text-primary">
+                    <span class="material-symbols-outlined animate-pulse text-secondary">temple_buddhist</span>
+                    <h2 class="text-white text-lg font-bold tracking-[0.15em] font-display">SYSTEM_ROOT<span
+                            class="text-secondary animate-pulse">_</span></h2>
+                </div>
+                <nav class="hidden md:flex flex-1 justify-end gap-8 items-center">
+                    <div class="flex items-center gap-6">
+                        <a class="text-gray-400 hover:text-primary text-xs tracking-widest transition-colors duration-200"
+                            href="#logs">[ LOGS ]</a>
+                        <a class="text-gray-400 hover:text-primary text-xs tracking-widest transition-colors duration-200"
+                            href="#simulation">[ SIMULATION ]</a>
+                        <a class="text-gray-400 hover:text-primary text-xs tracking-widest transition-colors duration-200"
+                            href="#arsenal">[ ARSENAL ]</a>
+                        <a class="text-gray-400 hover:text-primary text-xs tracking-widest transition-colors duration-200"
+                            href="#terminal">[ TERMINAL ]</a>
+                    </div>
+                    <button
+                        class="group relative flex cursor-pointer items-center justify-center overflow-hidden border border-primary px-4 py-1.5 bg-transparent hover:bg-primary/10 transition-all duration-300">
+                        <span
+                            class="absolute inset-0 w-full h-full bg-primary/20 scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500"></span>
+                        <span class="relative text-primary text-xs font-bold tracking-widest">CONNECT_WALLET.EXE</span>
+                    </button>
+                </nav>
+                <button class="md:hidden text-primary">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="relative pt-20">
+            <section class="relative min-h-[90vh] flex flex-col items-center justify-center px-4 py-10 overflow-hidden">
+                <div class="absolute inset-0 z-0 opacity-20 pointer-events-none"
+                    style="background-image: linear-gradient(0deg, transparent 24%, rgba(37, 244, 37, .3) 25%, rgba(37, 244, 37, .3) 26%, transparent 27%, transparent 74%, rgba(37, 244, 37, .3) 75%, rgba(37, 244, 37, .3) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(37, 244, 37, .3) 25%, rgba(37, 244, 37, .3) 26%, transparent 27%, transparent 74%, rgba(37, 244, 37, .3) 75%, rgba(37, 244, 37, .3) 76%, transparent 77%, transparent); background-size: 50px 50px;">
+                </div>
+
+                <div class="container relative z-10 max-w-5xl mx-auto flex flex-col items-center text-center gap-8">
+                    <!-- HERO IMAGE -->
+                    <div class="relative w-64 h-64 md:w-96 md:h-96 flex items-center justify-center mb-4 reveal-hidden"
+                        id="hero-img-reveal">
+                        <div class="absolute inset-0 border-[4px] border-primary/30 border-t-0 border-b-0 skew-x-12 animate-pulse"
+                            style="clip-path: polygon(10% 0, 90% 0, 90% 100%, 10% 100%);"></div>
+                        <div class="absolute top-10 w-full h-4 bg-primary/20 skew-y-2"></div>
+                        <div
+                            class="absolute top-20 w-[120%] -left-[10%] h-6 bg-secondary/80 skew-y-[-2deg] flex items-center justify-center overflow-hidden border border-secondary shadow-[0_0_15px_rgba(208,0,0,0.6)]">
+                            <span
+                                class="text-black font-black tracking-widest text-xs animate-pulse">CRITICAL_FAILURE</span>
+                        </div>
+                        <img alt="Neon glowing cybernetic torii gate with digital glitch effects"
+                            class="w-full h-full object-contain mix-blend-screen opacity-80"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQ92Ls7z0wzHkRauLGObtQ3jQN5VY0V8gz7OHZmuvmOfq6B7QoW2c_rOB6eMQoITF9CWV47L6DqfaE1ZRjdMoD7_vBjf6gZT-G5i4VEtMzurPTj_ZEtHipWHBsj5FhHF6cIi9-5EIhbI5a2Ft9U0iY-l5HEhwkjvZBX2jEjtTR8Kj_Ne2jmVG8X6zMJwYjn6HJtx4WDDopBsvmfTG1E_scM5UdFsXvGt9SiGb7xyU5zPrMkrjm5lFNkjz-zR6Zg41WAnpEJ2ozem-R" />
+                    </div>
+
+                    <!-- HERO TEXT -->
+                    <div class="space-y-4 reveal-hidden" id="hero-text-reveal">
+                        <h1
+                            class="text-5xl md:text-7xl lg:text-8xl font-black text-white font-display tracking-tighter leading-[0.9] crt-flicker">
+                            <span
+                                class="text-secondary block text-lg md:text-2xl font-mono tracking-widest mb-2 opacity-80">WARNING:
+                                SYSTEM BREACH</span>
+                            DATA_TEMPLE<span class="text-primary">.V2</span>
+                        </h1>
+                        <p
+                            class="max-w-2xl mx-auto text-primary/70 font-mono text-sm md:text-base leading-relaxed border-l-2 border-secondary pl-4 text-left">
+                            &gt; Entering corrupted memory sector...<br />
+                            &gt; Paradox detected: <span class="text-white">Destructive Technology</span> // <span
+                                class="text-white">Zen Philosophy</span>.<br />
+                            &gt; Loading profile: Full Stack Architect // Cybernetic Monk.
+                        </p>
+                    </div>
+
+                    <!-- HERO BUTTONS -->
+                    <div class="flex flex-col sm:flex-row gap-4 mt-8 reveal-hidden" id="hero-buttons-reveal">
+                        <a class="relative overflow-hidden group bg-secondary/10 border border-secondary text-secondary px-8 py-3 font-bold font-mono text-sm tracking-widest hover:bg-secondary hover:text-black transition-all duration-300 shadow-[0_0_10px_rgba(208,0,0,0.3)] hover:shadow-[0_0_20px_rgba(208,0,0,0.6)]"
+                            href="#terminal">
+                            <span
+                                class="absolute right-2 top-2 w-1.5 h-1.5 bg-secondary group-hover:bg-black rounded-full animate-pulse"></span>
+                            INITIATE_PROTOCOL
+                        </a>
+                        <a class="border border-primary/30 text-primary/70 px-8 py-3 font-mono text-sm tracking-widest hover:border-primary hover:text-primary hover:bg-primary/5 transition-all duration-300"
+                            href="#logs">
+                            VIEW_SOURCE_CODE
+                        </a>
+                    </div>
+                </div>
+
+                <div class="absolute bottom-10 right-10 flex flex-col gap-2 items-end opacity-50 reveal-hidden"
+                    id="hero-decor-reveal">
+                    <span class="material-symbols-outlined text-secondary text-xs animate-bounce"
+                        style="animation-delay: 0.2s">local_florist</span>
+                    <span class="material-symbols-outlined text-secondary text-sm animate-bounce"
+                        style="animation-delay: 0.5s">local_florist</span>
+                    <span class="material-symbols-outlined text-primary text-xs animate-bounce"
+                        style="animation-delay: 0.8s">data_object</span>
+                </div>
+            </section>
+
+            <section class="py-20 px-4 md:px-20 border-t border-dashed border-primary/20 bg-[#050a05] reveal-hidden"
+                id="logs-reveal">
+                <div class="max-w-4xl mx-auto">
+                    <div class="mb-12 flex items-end justify-between border-b border-secondary/30 pb-4">
+                        <div>
+                            <h2 class="text-4xl font-black text-white font-display mb-2">CORRUPTED_TIMELINE</h2>
+                            <p class="text-primary/60 font-mono text-xs">&gt; ACCESSING SECURITY LOGS... DECRYPTION IN
+                                PROGRESS</p>
+                        </div>
+                        <span class="material-symbols-outlined text-secondary text-4xl animate-pulse">history_edu</span>
+                    </div>
+                    <div class="grid grid-cols-[40px_1fr] gap-x-6">
+                        <!-- Timeline Item 1 -->
+                        <div class="flex flex-col items-center gap-2 pt-2">
+                            <div class="w-3 h-3 bg-secondary rounded-none shadow-[0_0_8px_#D00000]"></div>
+                            <div class="w-[2px] bg-gradient-to-b from-secondary to-primary/30 h-full grow"></div>
+                        </div>
+                        <div class="flex flex-col pb-12 group cursor-pointer">
+                            <div
+                                class="border border-primary/10 bg-black p-6 hover:border-secondary/50 hover:shadow-[0_0_15px_rgba(208,0,0,0.15)] transition-all duration-300 relative overflow-hidden">
+                                <div
+                                    class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-scales.png')] opacity-0 group-hover:opacity-10 transition-opacity duration-300">
+                                </div>
+                                <div class="flex justify-between items-start mb-2 relative z-10">
+                                    <h3
+                                        class="text-xl font-bold text-white font-display group-hover:text-secondary transition-colors">
+                                        SENIOR_ARCHITECT :: CYBER_CORP</h3>
+                                    <span class="text-xs bg-primary/20 text-primary px-2 py-1 font-mono">2023 -
+                                        PRESENT</span>
+                                </div>
+                                <p class="text-gray-400 font-mono text-sm leading-relaxed mb-4 relative z-10">
+                                    Orchestrated migration of legacy neural networks to quantum-resistant
+                                    infrastructure.
+                                    Deployed automated defense daemons reducing intrusion attempts by 99.9%.
+                                </p>
+                                <div class="flex gap-2 relative z-10">
+                                    <span
+                                        class="text-[10px] uppercase border border-primary/30 text-primary/70 px-2 py-0.5">Systems
+                                        Design</span>
+                                    <span
+                                        class="text-[10px] uppercase border border-primary/30 text-primary/70 px-2 py-0.5">Leadership</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Timeline Item 2 -->
+                        <div class="flex flex-col items-center gap-2">
+                            <div class="w-3 h-3 bg-primary rounded-none shadow-[0_0_8px_#25f425]"></div>
+                            <div class="w-[2px] bg-primary/30 h-full grow"></div>
+                        </div>
+                        <div class="flex flex-col pb-12 group cursor-pointer">
+                            <div
+                                class="border border-primary/10 bg-black p-6 hover:border-primary/50 hover:shadow-[0_0_15px_rgba(37,244,37,0.15)] transition-all duration-300">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 class="text-xl font-bold text-white font-display">FULL_STACK_OPERATIVE ::
+                                        NEON_SYSTEMS</h3>
+                                    <span class="text-xs bg-primary/10 text-primary/60 px-2 py-1 font-mono">2020 -
+                                        2023</span>
+                                </div>
+                                <p class="text-gray-400 font-mono text-sm leading-relaxed mb-4">
+                                    Constructed immersive front-end simulations for consumer-grade metaverse terminals.
+                                    Optimized React render cycles for low-latency feedback loops.
+                                </p>
+                                <div class="flex gap-2">
+                                    <span
+                                        class="text-[10px] uppercase border border-primary/30 text-primary/70 px-2 py-0.5">React</span>
+                                    <span
+                                        class="text-[10px] uppercase border border-primary/30 text-primary/70 px-2 py-0.5">Node.js</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Timeline Item 3 -->
+                        <div class="flex flex-col items-center gap-2">
+                            <div class="w-3 h-3 bg-primary/50 rounded-none"></div>
+                            <div class="w-[2px] bg-primary/10 h-full grow"></div>
+                        </div>
+                        <div class="flex flex-col pb-6 group cursor-pointer">
+                            <div
+                                class="border border-primary/10 bg-black p-6 hover:border-primary/50 transition-all duration-300 opacity-60 hover:opacity-100">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 class="text-xl font-bold text-white font-display">JUNIOR_ENFORCER :: DATA_HIVE
+                                    </h3>
+                                    <span class="text-xs bg-primary/5 text-primary/40 px-2 py-1 font-mono">2018 -
+                                        2020</span>
+                                </div>
+                                <p class="text-gray-400 font-mono text-sm leading-relaxed">
+                                    Maintained backend databases and executed routine code injections.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="py-20 px-4 md:px-10 bg-background-dark relative reveal-hidden" id="simulation-reveal">
+                <div class="max-w-6xl mx-auto">
+                    <div
+                        class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/30 pb-4">
+                        <div>
+                            <h2 class="text-4xl font-black text-white font-display mb-2">SIMULATION_GALLERY</h2>
+                            <p class="text-secondary font-mono text-xs animate-pulse">&gt;&gt; VISUALIZING CONTAINMENT
+                                CAPSULES...</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="material-symbols-outlined text-primary/50">view_module</span>
+                            <span class="material-symbols-outlined text-primary/50">view_stream</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Item 1 -->
+                        <div
+                            class="group relative bg-[#0a0a0a] border-2 border-gray-800 hover:border-primary transition-colors duration-300">
+                            <div
+                                class="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                            </div>
+                            <div
+                                class="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                            </div>
+                            <div class="aspect-video w-full overflow-hidden relative">
+                                <img alt="Futuristic cybersecurity dashboard interface with green data streams"
+                                    class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-105"
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6D9A6H3mZ6EZmRnLSsYDbNxfjc6mIF8ilmyzhBWEaVTep-Ne6ptQMm21_YAqeMOryLXuLunG4bYvb99uIYXAYt_oIYyR5IRiskBHX90-5AlYPQ6dHvIS4Zj7fjSVGsVfJR9oK81hnNoVIUx1pAfHt6WEX0VbTdSpqzL_BWSyLFZ8BDeltmVg5bkMGYrhKOSPeF5JdnizjuwBLr-qPj-b4KI2aO9fGnGy0II18zSP0joT92TwNpOo6Mi2O17G_Ykozyr2LyyswkZTm" />
+                                <div
+                                    class="absolute inset-0 bg-secondary/20 mix-blend-overlay opacity-0 group-hover:opacity-100 transition-opacity">
+                                </div>
+                                <div
+                                    class="absolute bottom-2 right-2 bg-black/80 px-2 py-1 text-[10px] text-primary border border-primary/30">
+                                    SECURE</div>
+                            </div>
+                            <div class="p-6 border-t border-gray-800 group-hover:border-primary/30">
+                                <h3 class="text-xl font-bold text-white font-display mb-2 group-hover:text-primary">
+                                    NEURAL_NET_V1</h3>
+                                <p class="text-gray-400 text-sm font-mono mb-4 line-clamp-2">AI-driven predictive market
+                                    analysis dashboard with real-time websocket feeds.</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span
+                                        class="text-xs text-secondary border border-secondary/30 px-2 py-0.5 rounded-sm">Python</span>
+                                    <span
+                                        class="text-xs text-primary border border-primary/30 px-2 py-0.5 rounded-sm">TensorFlow</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Item 2 -->
+                        <div
+                            class="group relative bg-[#0a0a0a] border-2 border-gray-800 hover:border-secondary transition-colors duration-300">
+                            <div class="aspect-video w-full overflow-hidden relative">
+                                <img alt="Abstract dark fluid simulation with glowing red accents"
+                                    class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUQFbKe9lU5svKhkpyMJ5h7EKdHZI57AkbQztzajAgN9z3Mua87dWqM8UkBbYGSeEtfKBwcVjJFBke6iNJ5BfHOsFo5XoYITGyfD0lHp3omVUbcO1vjN3-F1hb6ZBJBq2K9kXWzWkrJ9ZuzGZdtGlVWRY_P6346oUclip45TMYJwiNB3lA_tw0rQ7kYUo9BtYaJhoVxZdfIFzZskMQb3kUJ2qxCtnXu8slDF0gqNCgDpsSlrcacrJ1I_yfGt2YXZtA-iClaT602WyM" />
+                                <div
+                                    class="absolute inset-0 opacity-0 group-hover:opacity-30 pointer-events-none bg-red-900 mix-blend-color-dodge transition-opacity">
+                                </div>
+                                <div
+                                    class="absolute top-2 left-2 bg-secondary text-black px-2 py-1 text-[10px] font-bold animate-pulse">
+                                    INFECTED</div>
+                            </div>
+                            <div class="p-6 border-t border-gray-800 group-hover:border-secondary/30">
+                                <h3 class="text-xl font-bold text-white font-display mb-2 group-hover:text-secondary">
+                                    AKIRA_PROTOCOL</h3>
+                                <p class="text-gray-400 text-sm font-mono mb-4 line-clamp-2">Decentralized identity
+                                    verification system using zero-knowledge proofs.</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span
+                                        class="text-xs text-white border border-white/30 px-2 py-0.5 rounded-sm">Solidity</span>
+                                    <span
+                                        class="text-xs text-white border border-white/30 px-2 py-0.5 rounded-sm">React</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Item 3 -->
+                        <div
+                            class="group relative bg-[#0a0a0a] border-2 border-gray-800 hover:border-primary transition-colors duration-300">
+                            <div class="aspect-video w-full overflow-hidden relative">
+                                <img alt="Digital wireframe of a globe network connectivity map"
+                                    class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbBX1cloX2fNyuwzp3teZtMWrxmE3QBP5B0kcTCPbbEvOP0FB-Jtu1hABHOpE9x_3miDuIuN0qbGcoO06rPWqdWeuXGBEdaIOsuZn7274fxcaTvdHpL6g-UKYoQubvR6V55OGbcTMCRQoAxxg0lb-loka7sv7UOopAezt13ip3NSZKQfn-_8RS64lE_1bIkhCqGwjxrqKo1fU_5YYjfOQajL1K4-wMABZN6WamSnAhviWwxYqVC6hIJtnDuXOKeHkZfDuIU9hFrOjD" />
+                            </div>
+                            <div class="p-6 border-t border-gray-800 group-hover:border-primary/30">
+                                <h3 class="text-xl font-bold text-white font-display mb-2 group-hover:text-primary">
+                                    CITY_OS_KERNEL</h3>
+                                <p class="text-gray-400 text-sm font-mono mb-4 line-clamp-2">Smart city infrastructure
+                                    management panel. Optimizes power grid distribution.</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span
+                                        class="text-xs text-primary border border-primary/30 px-2 py-0.5 rounded-sm">Vue.js</span>
+                                    <span
+                                        class="text-xs text-primary border border-primary/30 px-2 py-0.5 rounded-sm">D3.js</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="py-20 px-4 bg-[#020202] border-t border-primary/10 reveal-hidden" id="arsenal-reveal">
+                <div class="max-w-5xl mx-auto">
+                    <h2 class="text-4xl font-black text-white font-display mb-10 text-center">CYBERNETIC_ARSENAL</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div
+                            class="bg-[#080808] border border-gray-800 p-6 flex flex-col items-center text-center hover:border-primary hover:shadow-[0_0_10px_rgba(37,244,37,0.2)] transition-all group">
+                            <span
+                                class="material-symbols-outlined text-4xl text-gray-500 group-hover:text-primary mb-4 transition-colors">code_blocks</span>
+                            <h3 class="text-lg font-bold text-white font-display mb-1">REACT.JS</h3>
+                            <p class="text-[10px] text-gray-400 font-mono italic">"Components bind / Virtual DOM
+                                refreshes / Order from chaos"</p>
+                        </div>
+                        <div
+                            class="bg-[#080808] border border-gray-800 p-6 flex flex-col items-center text-center hover:border-secondary hover:shadow-[0_0_10px_rgba(208,0,0,0.2)] transition-all group">
+                            <span
+                                class="material-symbols-outlined text-4xl text-gray-500 group-hover:text-secondary mb-4 transition-colors">terminal</span>
+                            <h3 class="text-lg font-bold text-white font-display mb-1">PYTHON</h3>
+                            <p class="text-[10px] text-gray-400 font-mono italic">"The serpent coils / Devouring data's
+                                noise / Logic remains"</p>
+                        </div>
+                        <div
+                            class="bg-[#080808] border border-gray-800 p-6 flex flex-col items-center text-center hover:border-primary hover:shadow-[0_0_10px_rgba(37,244,37,0.2)] transition-all group">
+                            <span
+                                class="material-symbols-outlined text-4xl text-gray-500 group-hover:text-primary mb-4 transition-colors">dns</span>
+                            <h3 class="text-lg font-bold text-white font-display mb-1">POSTGRES</h3>
+                            <p class="text-[10px] text-gray-400 font-mono italic">"Structured memory / Relational truths
+                                align / Query the void"</p>
+                        </div>
+                        <div
+                            class="bg-[#080808] border border-gray-800 p-6 flex flex-col items-center text-center hover:border-white hover:shadow-[0_0_10px_rgba(255,255,255,0.2)] transition-all group">
+                            <span
+                                class="material-symbols-outlined text-4xl text-gray-500 group-hover:text-white mb-4 transition-colors">design_services</span>
+                            <h3 class="text-lg font-bold text-white font-display mb-1">FIGMA</h3>
+                            <p class="text-[10px] text-gray-400 font-mono italic">"Vectors in space / Prototypes dream
+                                of life / Pixel perfection"</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="py-20 px-4 bg-black relative overflow-hidden reveal-hidden" id="terminal-reveal">
+                <div class="absolute bottom-0 left-0 w-full h-full pointer-events-none opacity-20">
+                    <div class="absolute bottom-10 left-10 text-secondary animate-pulse"
+                        style="animation-duration: 4s;">
+                        <span class="material-symbols-outlined text-6xl rotate-[-45deg]">local_florist</span>
+                    </div>
+                </div>
+                <!-- TERMINAL FORM -->
+                <div class="max-w-3xl mx-auto relative z-10">
+                    <div class="bg-[#050505] border border-primary/30 p-1 md:p-2 rounded shadow-2xl">
+                        <div
+                            class="bg-[#1a1a1a] px-4 py-2 flex items-center justify-between border-b border-primary/20">
+                            <div class="flex gap-2">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            </div>
+                            <div class="text-xs text-gray-500 font-mono">user@temple-server:~</div>
+                        </div>
+                        <div class="p-6 md:p-10 font-mono text-sm md:text-base space-y-4 min-h-[400px]">
+                            <div class="text-primary/80">
+                                <span class="text-secondary">root@system:</span><span class="text-primary">~$</span>
+                                ./establish_connection.sh
+                            </div>
+                            <div class="text-gray-400 pl-4">
+                                &gt; Initializing handshake protocols...<br />
+                                &gt; Opening secure channel (port 443)...<br />
+                                &gt; Connection ESTABLISHED.
+                            </div>
+                            <form class="space-y-6 mt-8 border-l-2 border-primary/20 pl-4 md:pl-8 py-2">
+                                <div class="group">
+                                    <label
+                                        class="block text-primary/60 text-xs mb-1 group-focus-within:text-primary">&gt;
+                                        ENTER_IDENTITY (Name)</label>
+                                    <input
+                                        class="w-full bg-transparent border-0 border-b border-gray-700 focus:border-primary focus:ring-0 text-white font-mono placeholder-gray-800 py-1 px-0 transition-colors"
+                                        placeholder="Unknown_User" type="text" />
+                                </div>
+                                <div class="group">
+                                    <label
+                                        class="block text-primary/60 text-xs mb-1 group-focus-within:text-primary">&gt;
+                                        TARGET_COORDINATES (Email)</label>
+                                    <input
+                                        class="w-full bg-transparent border-0 border-b border-gray-700 focus:border-primary focus:ring-0 text-white font-mono placeholder-gray-800 py-1 px-0 transition-colors"
+                                        placeholder="email@domain.sys" type="email" />
+                                </div>
+                                <div class="group">
+                                    <label
+                                        class="block text-primary/60 text-xs mb-1 group-focus-within:text-primary">&gt;
+                                        TRANSMISSION_DATA (Message)</label>
+                                    <textarea
+                                        class="w-full bg-transparent border-0 border-b border-gray-700 focus:border-primary focus:ring-0 text-white font-mono placeholder-gray-800 py-1 px-0 transition-colors"
+                                        placeholder="Input message stream..." rows="3"></textarea>
+                                </div>
+                                <div class="pt-4">
+                                    <button
+                                        class="bg-primary text-black font-bold px-6 py-2 hover:bg-white hover:text-black transition-colors flex items-center gap-2 text-sm uppercase tracking-widest"
+                                        type="button">
+                                        <span class="material-symbols-outlined text-sm">send</span>
+                                        EXECUTE_TRANSMISSION
+                                    </button>
+                                </div>
+                            </form>
+                            <div class="pt-8 border-t border-dashed border-gray-800 mt-8">
+                                <p class="text-gray-500 mb-4">&gt; ALTERNATIVE_CHANNELS:</p>
+                                <div class="flex flex-wrap gap-6">
+                                    <a class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group"
+                                        href="#">
+                                        <span class="material-symbols-outlined group-hover:text-[#0077b5]">badge</span>
+                                        <span>CORP_ACCESS_CARD (LinkedIn)</span>
+                                    </a>
+                                    <a class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group"
+                                        href="#">
+                                        <span class="material-symbols-outlined group-hover:text-white">code</span>
+                                        <span>SOURCE_REPO (GitHub)</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-8 text-center">
+                        <p class="text-secondary font-mono text-xs animate-pulse">SIMULATION TERMINATED. DISCONNECT?</p>
+                    </div>
+                </div>
+            </section>
+
+            <footer
+                class="bg-black py-8 border-t border-[#1a1a1a] text-center font-mono text-[10px] text-gray-600 reveal-hidden"
+                id="footer-reveal">
+                <p>© 2024 DIGITAL_TEMPLE. ALL RIGHTS RESERVED. <span class="text-red-900">NO ESCAPE.</span></p>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        const bootLogs = [
+            "BIOS DATE 12/16/2077 05:41:00 VER 1.0.9",
+            "CPU: QUANTUM CORE i9-9900K @ 900THz",
+            "DETECTING PRIMARY MASTER ... SYSTEM_ROOT",
+            "DETECTING PRIMARY SLAVE  ... DATA_TEMPLE",
+            "CHECKING NVRAM ..................... [ OK ]",
+            "LOADING KERNEL ..................... [ OK ]",
+            "INITIALIZING MAINFRAME CONNECTION...",
+            "DECRYPTING SECURE PROTOCOLS...",
+            "WARNING: UNAUTHORIZED ACCESS DETECTED",
+            "OVERRIDING SECURITY PROTOCOLS...",
+            "SYSTEM BREACH IMMINENT...",
+            "WELCOME TO THE DIGITAL TEMPLE"
+        ];
+
+        const bootScreen = document.getElementById('boot-screen');
+        const bootTextContainer = document.getElementById('boot-text-container');
+        const mainContent = document.getElementById('main-content');
+        const noiseOverlay = document.getElementById('noise-overlay');
+
+        // Helper to sleep
+        const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        // Typewriter effect for a single line
+        async function typeLine(text, container, speed = 20) {
+            const p = document.createElement('div');
+            p.className = 'boot-log text-sm md:text-base';
+            p.innerHTML = `<span class="text-primary w-2 inline-block">></span> <span class="typing-text"></span><span class="boot-cursor inline-block w-2 bg-primary/50 ml-1">&nbsp;</span>`;
+            container.appendChild(p);
+
+            const textSpan = p.querySelector('.typing-text');
+            // Remove previous cursors
+            document.querySelectorAll('.boot-cursor').forEach(el => {
+                if (el !== p.querySelector('.boot-cursor')) el.style.display = 'none';
+            });
+
+            for (let i = 0; i < text.length; i++) {
+                textSpan.textContent += text.charAt(i);
+                await wait(speed);
+            }
+            await wait(50 + Math.random() * 100);
+        }
+
+        // Sequence controller
+        async function startBootSequence() {
+            // Phase 1: Text Scrolling
+            for (const log of bootLogs) {
+                await typeLine(log, bootTextContainer, 10); // Fast typing
+                // Scroll to bottom
+                window.scrollTo(0, document.body.scrollHeight);
+            }
+
+            await wait(600);
+
+            // Phase 2: Glitch Transition
+            noiseOverlay.style.animation = 'flash-noise 0.5s infinite';
+            noiseOverlay.style.opacity = '0.5';
+
+            await wait(800);
+
+            // Clear Boot Screen
+            bootScreen.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+            bootScreen.style.opacity = '0';
+            bootScreen.style.transform = 'scale(1.1)';
+            bootScreen.style.pointerEvents = 'none';
+
+            noiseOverlay.style.animation = ''; // Stop constant flashing
+            noiseOverlay.style.opacity = '0';
+
+            // RESET SCROLL to top
+            window.scrollTo(0, 0);
+
+            // Show Main Content Container
+            if (mainContent) {
+                mainContent.style.opacity = '1';
+            } else {
+                console.error("Main content container not found!");
+            }
+
+            // Phase 3: Reveal Elements sequentially
+            const revealIds = [
+                'header-reveal',
+                'hero-img-reveal',
+                'hero-text-reveal',
+                'hero-buttons-reveal',
+                'hero-decor-reveal',
+                'logs-reveal',
+                'simulation-reveal',
+                'arsenal-reveal',
+                'terminal-reveal',
+                'footer-reveal'
+            ];
+
+            for (const id of revealIds) {
+                const el = document.getElementById(id);
+                if (el) {
+                    // Add glitter flash
+                    noiseOverlay.classList.add('glitch-flash');
+                    setTimeout(() => noiseOverlay.classList.remove('glitch-flash'), 250);
+
+                    el.classList.remove('reveal-hidden');
+                    el.classList.add('reveal-active');
+                    await wait(200); // Stagger time
+                }
+            }
+
+            // Reveal Sakura independently for smoother effect
+            await wait(500);
+            const sakuraBranches = document.querySelectorAll('.sakura-branch');
+
+            // Set initial opacity to 0.8 as requested
+            sakuraBranches.forEach(el => {
+                el.style.opacity = '0.8';
+            });
+
+            // Scroll-based opacity fading
+            window.addEventListener('scroll', () => {
+                const scrollY = window.scrollY;
+                const maxScroll = document.body.scrollHeight - window.innerHeight;
+                // Fade out faster: reducing 0.8 opacity based on scroll pixels
+                // For example, reduce by 0.001 per pixel, clamping at 0.1
+                let newOpacity = 0.8 - (scrollY * 0.0015);
+
+                if (newOpacity < 0.1) newOpacity = 0.1;
+                if (newOpacity > 0.8) newOpacity = 0.8;
+
+                sakuraBranches.forEach(el => {
+                    el.style.opacity = newOpacity.toString();
+                });
+            });
+        }
+
+        // Start on load
+        window.addEventListener('load', startBootSequence);
+
+    </script>
+</body>
+
+</html>
